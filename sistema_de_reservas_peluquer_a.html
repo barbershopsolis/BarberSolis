@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salon & Style - Reservas de Peluquería</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            dark: '#121212',
+                            card: '#1e1e24',
+                            accent: '#d4af37', // Gold accent
+                            accentHover: '#b89628',
+                            pink: '#e879f9',
+                            muted: '#2a2a32',
+                            light: '#f8fafc'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0d0d11;
+            color: #f1f5f9;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #121212;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #d4af37;
+        }
+        .glass-panel {
+            background: rgba(30, 30, 36, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.02); }
+        }
+        .glow-active {
+            animation: pulse-glow 2s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased min-h-screen flex flex-col justify-between">
+
+    <header class="border-b border-white/10 sticky top-0 z-40 bg-brand-dark/90 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <!-- Logo -->
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-brand-accent to-amber-200 flex items-center justify-center text-brand-dark font-bold text-xl shadow-lg">
+                    <i class="fa-solid font-scissors text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-wide text-white">LUMIÈRE <span class="text-brand-accent text-xs font-semibold px-2 py-0.5 rounded bg-brand-accent/10 border border-brand-accent/30">STUDIO</span></h1>
+                    <p class="text-xs text-gray-400">Peluquería & Estética Estilo</p>
+                </div>
+            </div>
+
+            <!-- View Switcher Tabs -->
+            <div class="flex bg-brand-muted p-1 rounded-xl border border-white/5">
+                <button id="tabClient" onclick="switchTab('client')" class="flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 bg-brand-accent text-brand-dark shadow-md">
+                    <i class="fa-solid fa-calendar-plus"></i>
+                    <span>Reservar Turno</span>
+                </button>
+                <button id="tabAdmin" onclick="switchTab('admin')" class="flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-gray-300 hover:text-white relative">
+                    <i class="fa-solid fa-user-shield"></i>
+                    <span>Panel Admin</span>
+                    <span id="badgeNotification" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center animate-bounce">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
+
+        <!-- CLIENT VIEW -->
+        <section id="clientView" class="space-y-8">
+            <!-- Hero Banner -->
+            <div class="relative rounded-2xl overflow-hidden glass-panel p-6 sm:p-10 border border-brand-accent/20 bg-gradient-to-r from-brand-card via-brand-dark to-brand-card">
+                <div class="max-w-2xl">
+                    <span class="text-brand-accent text-sm font-semibold tracking-wider uppercase">Reserva tu experiencia</span>
+                    <h2 class="text-3xl sm:text-4xl font-extrabold text-white mt-1 mb-3">Agenda tu turno en segundos</h2>
+                    <p class="text-gray-400 text-sm sm:text-base">Selecciona un día en el calendario para consultar disponibilidad en tiempo real. Los turnos ocupados no podrán volver a reservarse.</p>
+                </div>
+            </div>
+
+            <!-- Booking Section Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                
+                <!-- Step 1: Date & Time Selector (8 cols) -->
+                <div class="lg:col-span-7 space-y-6">
+                    <div class="glass-panel p-6 rounded-2xl border border-white/5">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                                <span class="w-7 h-7 rounded-full bg-brand-accent/20 text-brand-accent text-xs flex items-center justify-center font-bold">1</span>
+                                Selecciona el Día
+                            </h3>
+                            <input type="date" id="datePicker" class="bg-brand-dark border border-white/20 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-brand-accent transition-colors" onchange="onDateChange()">
+                        </div>
+
+                        <!-- Date Status Banner -->
+                        <div id="dayStatusBadge" class="p-3 rounded-xl mb-6 flex items-center justify-between text-sm bg-gray-800 text-gray-300">
+                            <span class="flex items-center gap-2"><i class="fa-solid fa-info-circle"></i> Selecciona una fecha para consultar la disponibilidad</span>
+                            <span class="font-semibold text-xs uppercase px-2.5 py-1 rounded-full bg-white/10">Estado</span>
+                        </div>
+
+                        <!-- Legend -->
+                        <div class="flex items-center gap-6 mb-4 text-xs text-gray-400 border-t border-b border-white/5 py-3">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>
+                                <span>Disponible</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-red-500/80 inline-block"></span>
+                                <span>Ocupado (No disponible)</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-brand-accent inline-block"></span>
+                                <span>Seleccionado</span>
+                            </div>
+                        </div>
+
+                        <!-- Time Slots Grid -->
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-300 mb-3">Horarios disponibles para la fecha seleccionada:</h4>
+                            <div id="timeSlotsContainer" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                <div class="col-span-full py-8 text-center text-gray-500 text-sm">
+                                    Cargando horarios...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-5">
+                    <div class="glass-panel p-6 rounded-2xl border border-white/5 sticky top-28">
+                        <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                            <span class="w-7 h-7 rounded-full bg-brand-accent/20 text-brand-accent text-xs flex items-center justify-center font-bold">2</span>
+                            Completar la Reserva
+                        </h3>
+
+                        <form id="bookingForm" onsubmit="handleBookingSubmit(event)" class="space-y-4">
+                            <!-- Selected Details Summary -->
+                            <div class="bg-brand-dark/80 rounded-xl p-4 border border-white/10 space-y-2">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-400">Fecha elegida:</span>
+                                    <span id="summaryDate" class="font-semibold text-white">-- / -- / ----</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-400">Hora seleccionada:</span>
+                                    <span id="summaryTime" class="font-semibold text-brand-accent">No seleccionada</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1">Nombre Completo *</label>
+                                <div class="relative">
+                                    <i class="fa-solid fa-user absolute left-3 top-3 text-gray-500 text-sm"></i>
+                                    <input type="text" id="clientName" required placeholder="Ej. Valentina Gómez" class="w-full bg-brand-dark border border-white/10 rounded-lg pl-9 pr-3 py-2 text-white text-sm focus:outline-none focus:border-brand-accent transition">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1">Teléfono de Contacto *</label>
+                                <div class="relative">
+                                    <i class="fa-solid fa-phone absolute left-3 top-3 text-gray-500 text-sm"></i>
+                                    <input type="tel" id="clientPhone" required placeholder="Ej. +54 9 11 2345-6789" class="w-full bg-brand-dark border border-white/10 rounded-lg pl-9 pr-3 py-2 text-white text-sm focus:outline-none focus:border-brand-accent transition">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1">Servicio *</label>
+                                <div class="relative">
+                                    <i class="fa-solid fa-scissors absolute left-3 top-3 text-gray-500 text-sm"></i>
+                                    <select id="clientService" required class="w-full bg-brand-dark border border-white/10 rounded-lg pl-9 pr-3 py-2 text-white text-sm focus:outline-none focus:border-brand-accent transition">
+                                        <option value="" disabled selected>Selecciona un servicio</option>
+                                        <option value="Corte & Peinado">Corte & Peinado - $12.000</option>
+                                        <option value="Coloración / Tintura">Coloración / Balayage - $28.000</option>
+                                        <option value="Tratamiento Nutritivo">Tratamiento de Keratina - $18.000</option>
+                                        <option value="Barbería Completa">Barba & Corte Masculino - $10.000</option>
+                                        <option value="Peinado de Fiesta">Peinado de Fiesta / Evento - $20.000</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <button type="submit" id="btnSubmitBooking" disabled class="w-full py-3 px-4 bg-brand-accent hover:bg-brand-accentHover text-brand-dark font-bold rounded-xl transition duration-200 shadow-lg disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2">
+                                <i class="fa-solid fa-check-circle"></i>
+                                Confirmar y Agendar Turno
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section id="adminView" class="hidden space-y-8">
+            <!-- Admin Top Live Notification Panel -->
+            <div class="glass-panel p-6 rounded-2xl border border-brand-accent/30 bg-gradient-to-r from-brand-card to-brand-dark">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <span class="relative flex h-3 w-3">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                        </span>
+                        <h2 class="text-xl font-bold text-white">Notificaciones en Vivo para el Peluquero</h2>
+                    </div>
+                    <button onclick="clearNotifications()" class="text-xs text-gray-400 hover:text-white underline">
+                        Limpiar Notificaciones
+                    </button>
+                </div>
+
+                <!-- Recent Alerts Feed -->
+                <div id="liveNotificationsList" class="space-y-3 max-h-48 overflow-y-auto pr-2">
+                    <!-- Dynamic notifications will be appended here -->
+                    <div class="text-sm text-gray-400 italic py-2 text-center border border-dashed border-white/10 rounded-xl">
+                        No hay notificaciones recientes. Las nuevas reservas aparecerán aquí instantáneamente.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Turn Management -->
+            <div class="glass-panel p-6 rounded-2xl border border-white/5 space-y-6">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-white">Historial de Turnos Agendados</h3>
+                        <p class="text-xs text-gray-400">Administra, visualiza o cancela las citas de tus clientes.</p>
+                    </div>
+
+                    <!-- Filter Options -->
+                    <div class="flex items-center gap-3 w-full sm:w-auto">
+                        <label class="text-xs text-gray-400 whitespace-nowrap">Filtrar Día:</label>
+                        <input type="date" id="adminFilterDate" onchange="renderAdminBookings()" class="bg-brand-dark border border-white/20 rounded-lg px-3 py-1.5 text-white text-xs focus:outline-none focus:border-brand-accent">
+                        <button onclick="resetAdminFilter()" class="px-3 py-1.5 bg-brand-muted hover:bg-white/10 text-xs text-gray-300 rounded-lg transition">
+                            Todos
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Table / List of Bookings -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-gray-300">
+                        <thead class="text-xs uppercase bg-brand-dark text-gray-400 border-b border-white/10">
+                            <tr>
+                                <th class="py-3 px-4">Fecha & Hora</th>
+                                <th class="py-3 px-4">Cliente</th>
+                                <th class="py-3 px-4">Teléfono</th>
+                                <th class="py-3 px-4">Servicio</th>
+                                <th class="py-3 px-4 text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminBookingsTable" class="divide-y divide-white/5">
+                            <!-- Dynamic booking rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <div id="toastNotification" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 ease-out max-w-sm w-full bg-brand-card border border-brand-accent text-white p-4 rounded-xl shadow-2xl flex items-start space-x-3">
+        <div id="toastIcon" class="text-brand-accent text-xl mt-0.5"><i class="fa-solid fa-bell"></i></div>
+        <div class="flex-grow">
+            <h4 id="toastTitle" class="font-bold text-sm text-white">Notificación</h4>
+            <p id="toastMessage" class="text-xs text-gray-300 mt-0.5">Mensaje del sistema</p>
+        </div>
+        <button onclick="hideToast()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <footer class="border-t border-white/10 py-6 text-center text-xs text-gray-500 bg-brand-dark/50">
+        <p>© 2026 Lumière Studio - Sistema Intuitivo de Reservas en Tiempo Real</p>
+    </footer>
+
+    <script>
+        // --- CONSTANTS & CONFIG ---
+        const TIME_SLOTS = [
+            "09:00", "10:00", "11:00", "12:00", 
+            "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"
+        ];
+
+        // Global State variables
+        let bookings = [];
+        let notifications = [];
+        let selectedDate = "";
+        let selectedTime = null;
+
+        // --- INITIALIZATION ---
+        window.onload = function() {
+            // Set default date to today
+            const today = new Date().toISOString().split('T')[0];
+            const datePicker = document.getElementById('datePicker');
+            datePicker.min = today;
+            datePicker.value = today;
+            selectedDate = today;
+
+            // Load persisted data from localStorage
+            loadStoredData();
+
+            // BroadcastChannel for sync across tabs/windows (Real-time simulation)
+            initRealtimeSync();
+
+            // Initial UI render
+            renderTimeSlots();
+            renderAdminBookings();
+            renderNotifications();
+        };
+
+        // --- LOCAL STORAGE MANAGEMENT ---
+        function loadStoredData() {
+            try {
+                const storedBookings = localStorage.getItem('hairdresser_bookings');
+                if (storedBookings) bookings = JSON.parse(storedBookings);
+
+                const storedNotifications = localStorage.getItem('hairdresser_notifications');
+                if (storedNotifications) notifications = JSON.parse(storedNotifications);
+            } catch (e) {
+                console.error("Error reading localStorage", e);
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('hairdresser_bookings', JSON.stringify(bookings));
+            localStorage.setItem('hairdresser_notifications', JSON.stringify(notifications));
+            
+            // Broadcast event to other open tabs
+            if (window.bookingChannel) {
+                window.bookingChannel.postMessage({ type: 'DATA_UPDATED' });
+            }
+        }
+
+        // --- REAL-TIME TAB SYNC ---
+        function initRealtimeSync() {
+            if ('BroadcastChannel' in window) {
+                window.bookingChannel = new BroadcastChannel('hairdresser_channel');
+                window.bookingChannel.onmessage = (event) => {
+                    if (event.data && event.data.type === 'DATA_UPDATED') {
+                        loadStoredData();
+                        renderTimeSlots();
+                        renderAdminBookings();
+                        renderNotifications();
+                        
+                        // Show quick toast if new notification arrived
+                        if (notifications.length > 0) {
+                            const latest = notifications[0];
+                            showToast("¡Nuevo Turno Agendado!", `${latest.clientName} agendó para el ${formatDate(latest.date)} a las ${latest.time}hs.`);
+                        }
+                    }
+                };
+            }
+        }
+
+        // --- VIEW SWITCHER ---
+        function switchTab(tab) {
+            const clientView = document.getElementById('clientView');
+            const adminView = document.getElementById('adminView');
+            const tabClient = document.getElementById('tabClient');
+            const tabAdmin = document.getElementById('tabAdmin');
+
+            if (tab === 'client') {
+                clientView.classList.remove('hidden');
+                adminView.classList.add('hidden');
+                
+                tabClient.className = "flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 bg-brand-accent text-brand-dark shadow-md";
+                tabAdmin.className = "flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-gray-300 hover:text-white relative";
+            } else {
+                clientView.classList.add('hidden');
+                adminView.classList.remove('hidden');
+
+                tabAdmin.className = "flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 bg-brand-accent text-brand-dark shadow-md relative";
+                tabClient.className = "flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-gray-300 hover:text-white";
+
+                // Clear unread badge counter on opening admin
+                document.getElementById('badgeNotification').classList.add('hidden');
+            }
+        }
+
+        // --- CLIENT CALENDAR LOGIC ---
+        function onDateChange() {
+            const dateInput = document.getElementById('datePicker');
+            selectedDate = dateInput.value;
+            selectedTime = null; // reset selected time on date change
+            updateSummary();
+            renderTimeSlots();
+        }
+
+        function renderTimeSlots() {
+            const container = document.getElementById('timeSlotsContainer');
+            const badge = document.getElementById('dayStatusBadge');
+            container.innerHTML = '';
+
+            if (!selectedDate) {
+                container.innerHTML = '<div class="col-span-full text-center text-gray-500 py-4">Por favor elige una fecha.</div>';
+                return;
+            }
+
+            // Get booked slots for selectedDate
+            const bookedTimesForDay = bookings
+                .filter(b => b.date === selectedDate)
+                .map(b => b.time);
+
+            const totalSlots = TIME_SLOTS.length;
+            const occupiedCount = bookedTimesForDay.length;
+
+            // Update status badge
+            if (occupiedCount === totalSlots) {
+                badge.className = "p-3 rounded-xl mb-6 flex items-center justify-between text-sm bg-red-950/50 border border-red-500/30 text-red-200";
+                badge.innerHTML = `<span class="flex items-center gap-2"><i class="fa-solid fa-circle-xmark text-red-400"></i> Día Completo - Todos los turnos están ocupados</span>
+                                   <span class="font-bold text-xs uppercase px-2.5 py-1 rounded-full bg-red-500/20 text-red-300">Sin Cupos</span>`;
+            } else if (occupiedCount > 0) {
+                badge.className = "p-3 rounded-xl mb-6 flex items-center justify-between text-sm bg-amber-950/40 border border-amber-500/30 text-amber-200";
+                badge.innerHTML = `<span class="flex items-center gap-2"><i class="fa-solid fa-clock text-amber-400"></i> Disponibilidad Parcial (${totalSlots - occupiedCount} libres de ${totalSlots})</span>
+                                   <span class="font-bold text-xs uppercase px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300">Turnos Disponibles</span>`;
+            } else {
+                badge.className = "p-3 rounded-xl mb-6 flex items-center justify-between text-sm bg-emerald-950/40 border border-emerald-500/30 text-emerald-200";
+                badge.innerHTML = `<span class="flex items-center gap-2"><i class="fa-solid fa-circle-check text-emerald-400"></i> Total Disponibilidad - Todos los turnos están libres</span>
+                                   <span class="font-bold text-xs uppercase px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300">Día Libre</span>`;
+            }
+
+            // Render buttons for each time slot
+            TIME_SLOTS.forEach(time => {
+                const isBooked = bookedTimesForDay.includes(time);
+                const isSelected = selectedTime === time;
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+
+                if (isBooked) {
+                    // OCCUPIED STATE (Disabled)
+                    btn.disabled = true;
+                    btn.className = "p-3 rounded-xl border border-red-900/50 bg-red-950/20 text-red-400 flex flex-col items-center justify-center opacity-60 cursor-not-allowed select-none";
+                    btn.innerHTML = `
+                        <span class="font-bold text-base line-through">${time}</span>
+                        <span class="text-[10px] font-semibold text-red-400 mt-0.5 flex items-center gap-1">
+                            <i class="fa-solid fa-lock text-[9px]"></i> Ocupado
+                        </span>
+                    `;
+                } else if (isSelected) {
+                    // SELECTED STATE
+                    btn.className = "p-3 rounded-xl border-2 border-brand-accent bg-brand-accent/20 text-white flex flex-col items-center justify-center shadow-lg transform scale-105 transition-all";
+                    btn.innerHTML = `
+                        <span class="font-bold text-base text-brand-accent">${time}</span>
+                        <span class="text-[10px] font-semibold text-brand-accent mt-0.5 flex items-center gap-1">
+                            <i class="fa-solid fa-check"></i> Seleccionado
+                        </span>
+                    `;
+                } else {
+                    // AVAILABLE STATE
+                    btn.className = "p-3 rounded-xl border border-emerald-500/30 bg-emerald-950/10 hover:bg-emerald-500/20 text-emerald-300 hover:border-emerald-400 flex flex-col items-center justify-center transition-all duration-150 cursor-pointer";
+                    btn.onclick = () => selectTimeSlot(time);
+                    btn.innerHTML = `
+                        <span class="font-bold text-base text-white">${time}</span>
+                        <span class="text-[10px] font-semibold text-emerald-400 mt-0.5 flex items-center gap-1">
+                            <i class="fa-solid fa-circle-dot text-[8px]"></i> Libre
+                        </span>
+                    `;
+                }
+
+                container.appendChild(btn);
+            });
+        }
+
+        function selectTimeSlot(time) {
+            selectedTime = time;
+            updateSummary();
+            renderTimeSlots();
+        }
+
+        function updateSummary() {
+            document.getElementById('summaryDate').textContent = formatDate(selectedDate);
+            document.getElementById('summaryTime').textContent = selectedTime ? `${selectedTime} hs` : 'No seleccionada';
+            
+            const submitBtn = document.getElementById('btnSubmitBooking');
+            submitBtn.disabled = !(selectedDate && selectedTime);
+        }
+
+        // --- BOOKING SUBMISSION LOGIC ---
+        function handleBookingSubmit(e) {
+            e.preventDefault();
+
+            if (!selectedDate || !selectedTime) {
+                showToast("Error", "Debes seleccionar una fecha y un horario.", "error");
+                return;
+            }
+
+            // CRITICAL CHECK: Verify slot is not already taken by another person
+            const isAlreadyTaken = bookings.some(b => b.date === selectedDate && b.time === selectedTime);
+            if (isAlreadyTaken) {
+                showToast("Turno No Disponible", "Lo sentimos, este turno acaba de ser agendado por otra persona. Por favor elige otro horario.", "error");
+                renderTimeSlots();
+                return;
+            }
+
+            const name = document.getElementById('clientName').value.trim();
+            const phone = document.getElementById('clientPhone').value.trim();
+            const service = document.getElementById('clientService').value;
+
+            const newBooking = {
+                id: 'book_' + Date.now(),
+                date: selectedDate,
+                time: selectedTime,
+                clientName: name,
+                clientPhone: phone,
+                service: service,
+                createdAt: new Date().toISOString()
+            };
+
+            // Save booking
+            bookings.push(newBooking);
+
+            // Add notification for hairdresser
+            const newNotification = {
+                id: 'notif_' + Date.now(),
+                clientName: name,
+                date: selectedDate,
+                time: selectedTime,
+                service: service,
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            };
+            notifications.unshift(newNotification);
+
+            // Persist
+            saveData();
+
+            // Refresh UI components
+            renderTimeSlots();
+            renderAdminBookings();
+            renderNotifications();
+
+            // Show confirmation modal/toast
+            showToast("¡Turno Agendado Con Éxito!", `Hola ${name}, tu turno para el ${formatDate(selectedDate)} a las ${selectedTime} hs ha sido registrado.`);
+
+            // Update badge for admin view tab
+            const badge = document.getElementById('badgeNotification');
+            badge.textContent = parseInt(badge.textContent || 0) + 1;
+            badge.classList.remove('hidden');
+
+            // Reset form
+            document.getElementById('bookingForm').reset();
+            selectedTime = null;
+            updateSummary();
+        }
+
+        // --- ADMIN VIEW RENDERERS ---
+        function renderAdminBookings() {
+            const tableBody = document.getElementById('adminBookingsTable');
+            const filterDate = document.getElementById('adminFilterDate').value;
+            tableBody.innerHTML = '';
+
+            let filtered = bookings;
+            if (filterDate) {
+                filtered = bookings.filter(b => b.date === filterDate);
+            }
+
+            // Sort chronologically (Date & Time)
+            filtered.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+
+            if (filtered.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="py-8 text-center text-gray-500 italic">
+                            No hay turnos agendados ${filterDate ? 'para la fecha seleccionada' : 'en el sistema'}.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            filtered.forEach(booking => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-white/5 transition-colors border-b border-white/5";
+                tr.innerHTML = `
+                    <td class="py-3.5 px-4 font-semibold text-white">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-regular fa-calendar text-brand-accent"></i>
+                            ${formatDate(booking.date)} - <span class="text-brand-accent">${booking.time} hs</span>
+                        </div>
+                    </td>
+                    <td class="py-3.5 px-4 text-white font-medium">
+                        <i class="fa-regular fa-user text-gray-400 mr-1.5"></i> ${escapeHTML(booking.clientName)}
+                    </td>
+                    <td class="py-3.5 px-4 text-gray-300">
+                        <a href="https://wa.me/${booking.clientPhone.replace(/[^0-9]/g, '')}" target="_blank" class="hover:text-emerald-400 transition flex items-center gap-1">
+                            <i class="fa-brands fa-whatsapp text-emerald-500"></i> ${escapeHTML(booking.clientPhone)}
+                        </a>
+                    </td>
+                    <td class="py-3.5 px-4">
+                        <span class="bg-brand-muted text-gray-300 px-2.5 py-1 rounded-md text-xs border border-white/10">
+                            ${escapeHTML(booking.service)}
+                        </span>
+                    </td>
+                    <td class="py-3.5 px-4 text-center">
+                        <button onclick="cancelBooking('${booking.id}')" title="Cancelar Turno" class="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        }
+
+        function cancelBooking(bookingId) {
+            if (confirm("¿Estás seguro de que deseas cancelar este turno? Esta acción liberará el horario inmediatamente.")) {
+                bookings = bookings.filter(b => b.id !== bookingId);
+                saveData();
+                renderTimeSlots();
+                renderAdminBookings();
+                showToast("Turno Cancelado", "El turno ha sido removido y el horario volvió a quedar libre.", "info");
+            }
+        }
+
+        function resetAdminFilter() {
+            document.getElementById('adminFilterDate').value = '';
+            renderAdminBookings();
+        }
+
+        function renderNotifications() {
+            const container = document.getElementById('liveNotificationsList');
+            container.innerHTML = '';
+
+            if (notifications.length === 0) {
+                container.innerHTML = `
+                    <div class="text-sm text-gray-400 italic py-3 text-center border border-dashed border-white/10 rounded-xl">
+                        No hay notificaciones recientes. Las nuevas reservas aparecerán aquí en vivo.
+                    </div>
+                `;
+                return;
+            }
+
+            notifications.forEach(notif => {
+                const div = document.createElement('div');
+                div.className = "bg-brand-dark/90 border-l-4 border-brand-accent p-3.5 rounded-r-xl flex items-start justify-between shadow-md transition transform hover:translate-x-1";
+                div.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-full bg-brand-accent/20 text-brand-accent flex items-center justify-center font-bold text-xs mt-0.5">
+                            <i class="fa-solid fa-bell"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-white font-semibold">
+                                ¡Nuevo turno agendado! <span class="text-brand-accent font-bold">${escapeHTML(notif.clientName)}</span>
+                            </p>
+                            <p class="text-xs text-gray-300 mt-0.5">
+                                Agendó para el <strong class="text-white">${formatDate(notif.date)}</strong> a las <strong class="text-brand-accent">${notif.time} hs</strong> (${escapeHTML(notif.service)}).
+                            </p>
+                        </div>
+                    </div>
+                    <span class="text-[10px] text-gray-500 font-mono whitespace-nowrap ml-2">${notif.timestamp}</span>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function clearNotifications() {
+            notifications = [];
+            saveData();
+            renderNotifications();
+        }
+
+        // --- UTILITY HELPERS ---
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const parts = dateStr.split('-');
+            if (parts.length !== 3) return dateStr;
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+
+        function showToast(title, message, type = "success") {
+            const toast = document.getElementById('toastNotification');
+            const toastTitle = document.getElementById('toastTitle');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastTitle.textContent = title;
+            toastMessage.textContent = message;
+
+            if (type === "error") {
+                toast.className = "fixed bottom-5 right-5 z-50 transform transition-all duration-300 ease-out max-w-sm w-full bg-red-950 border border-red-500 text-white p-4 rounded-xl shadow-2xl flex items-start space-x-3 translate-y-0 opacity-100";
+                toastIcon.className = "text-red-400 text-xl mt-0.5";
+                toastIcon.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i>`;
+            } else {
+                toast.className = "fixed bottom-5 right-5 z-50 transform transition-all duration-300 ease-out max-w-sm w-full bg-brand-card border border-brand-accent text-white p-4 rounded-xl shadow-2xl flex items-start space-x-3 translate-y-0 opacity-100";
+                toastIcon.className = "text-brand-accent text-xl mt-0.5";
+                toastIcon.innerHTML = `<i class="fa-solid fa-circle-check"></i>`;
+            }
+
+            setTimeout(() => {
+                hideToast();
+            }, 5000);
+        }
+
+        function hideToast() {
+            const toast = document.getElementById('toastNotification');
+            toast.classList.add('translate-y-20', 'opacity-0');
+            toast.classList.remove('translate-y-0', 'opacity-100');
+        }
+    </script>
+</body>
+</html>
